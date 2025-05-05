@@ -1,0 +1,38 @@
+version: "3.8"
+services:
+  mysql:
+    image: mysql:8
+    container_name: mysql-container
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpass
+      MYSQL_DATABASE: shopdb
+      MYSQL_USER: springuser
+      MYSQL_PASSWORD: springpass
+    ports:
+      - "3307:3306"     # Cổng 3306 của MySQL trong container được ánh xạ ra 3307 trên host (có ích để test từ host nếu cần)
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - shop-network
+
+  app:
+    image: shopapp              # Đây là image ứng dụng Spring Boot của bạn sau khi build từ file jar
+    container_name: shopapp-container
+    restart: always
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql-container:3306/shopdb?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+      SPRING_DATASOURCE_USERNAME: springuser
+      SPRING_DATASOURCE_PASSWORD: springpass
+    ports:
+      - "8090:8090"    # ánh xạ cổng ứng dụng Spring Boot (ví dụ: 8090)
+    depends_on:
+      - mysql
+    networks:
+      - shop-network
+
+volumes:
+  mysql_data:
+
+networks:
+  shop-network:
