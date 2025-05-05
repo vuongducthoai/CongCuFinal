@@ -1,0 +1,33 @@
+version: '3.8'
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: mysql_shopapp
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: Thoai12309@
+      MYSQL_DATABASE: shopapp
+    ports:
+      - "3307:3306"
+    networks:
+      - shopnet
+
+  app:
+    container_name: shopapp_backend
+    build:
+      context: .
+      dockerfile: Dockerfile  # Đảm bảo rằng bạn có Dockerfile trong dự án của bạn
+    ports:
+      - "8090:8090"
+    depends_on:
+      - mysql
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql:3306/shopapp?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+      - SPRING_DATASOURCE_USERNAME=root
+      - SPRING_DATASOURCE_PASSWORD=Thoai12309@
+    networks:
+      - shopnet
+
+networks:
+  shopnet:
