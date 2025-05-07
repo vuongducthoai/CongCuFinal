@@ -19,7 +19,7 @@ jobs:
       - name: Notify Jira if failed
         if: failure()  # Nếu kiểm tra bị lỗi
         run: |
-          curl -u ${{ secrets.thoai12309@gmail.com }}:${{ secrets.ATATT3xFfGF0nc-yMA3DUKe3SdAFAy1-TvYGRJaZ55xVjfeDiEXzcSXjaOfZNwd8SUPP4HycSZ9_6C5SM7Jz8U1ndQrJwLjmGjOVD-Pgy9uXwV8e1sQaPZ6MpVEP1JXntGSWX7mdAVTRTr01jZeZHV3NbHLuvl1sxlO43S6MaZivmmKHKEoXZn4=BE5F609F }} \
+          curl -u ${{ secrets.JIRA_USER  }}:${{ secrets.JIRA_API_TOKEN  }} \
           -X POST \
           -H "Content-Type: application/json" \
           -d '{
