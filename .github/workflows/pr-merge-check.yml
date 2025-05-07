@@ -13,15 +13,15 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      # Bước 2: Cài đặt Checkstyle mà không cần JDK
+      # Bước 2: Cài đặt Checkstyle từ Maven Central
       - name: Install Checkstyle
         run: |
-          curl -s https://checkstyle.org/gettingstarted.html | bash  # Tải và cài đặt Checkstyle
-
+          curl -O https://repo1.maven.org/maven2/com/puppycrawl/tools/checkstyle/8.45/checkstyle-8.45-all.jar  # Tải Checkstyle JAR
+          
       # Bước 3: Chạy Checkstyle để kiểm tra cú pháp Java
       - name: Run Checkstyle
         run: |
-          checkstyle -c /google_checks.xml src/main/java/com/project/shopapp  # Đường dẫn đến mã nguồn Java của bạn
+          java -jar checkstyle-8.45-all.jar -c /google_checks.xml src/main/java/com/project/shopapp  # Kiểm tra cú pháp mã nguồn Java của bạn
 
       # Bước 4: Thông báo lỗi nếu phát hiện vấn đề cú pháp
       - name: Notify Jira if syntax error
