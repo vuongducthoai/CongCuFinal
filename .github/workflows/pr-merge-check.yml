@@ -1,11 +1,11 @@
-name: PR Merge Check
+name: Java Syntax Check
 
 on:
   pull_request:
-    types: [closed]  # Chỉ khi PR được đóng lại (hoặc merge)
+    types: [opened, synchronize, reopened]  # Chạy khi có PR mở hoặc cập nhật
 
 jobs:
-  check-merge:
+  check-syntax:
     runs-on: ubuntu-latest
     
     steps:
@@ -13,29 +13,26 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      # Bước 2: Cài đặt JDK và Maven
+      # Bước 2: Cài đặt JDK (Checkstyle yêu cầu JDK để kiểm tra mã Java)
       - name: Set up JDK 11
         uses: actions/setup-java@v3
         with:
           java-version: '11'  # Hoặc phiên bản Java bạn đang sử dụng
           distribution: 'adoptopenjdk'
 
-      - name: Set up Maven
-        uses: actions/setup-maven@v2
-        with:
-          maven-version: '3.8.1'  # Hoặc phiên bản Maven bạn đang sử dụng
+      # Bước 3: Cài đặt Checkstyle
+      - name: Install Checkstyle
+        run: |
+          curl -s https://checkstyle.org/gettingstarted.html | bash  # Tải và cài đặt Checkstyle
 
-      # Bước 3: Cài đặt dependencies và build ứng dụng
-      - name: Build with Maven
-        run: mvn clean install -DskipTests  # Chạy lệnh clean và install, bỏ qua tests
-
-      # Bước 4: Chạy các bài kiểm tra (tests)
-      - name: Run tests
-        run: mvn test  # Chạy tất cả các bài test trong dự án Spring Boot của bạn
-
-      # Bước 5: Thông báo lỗi nếu test thất bại
-      - name: Notify Jira if failed
-        if: failure()  # Chỉ thực thi nếu bước trên gặp lỗi
+      # Bước 4: Chạy Checkstyle để kiểm tra mã Java
+      - name: Run Checkstyle
+        run: |
+          checkstyle -c /google_checks.xml src/main/java/com/project/shopapp  # Đường dẫn đến mã nguồn Java của bạn
+          
+      # Bước 5: Thông báo lỗi nếu phát hiện vấn đề cú pháp
+      - name: Notify Jira if syntax error
+        if: failure()  # Chỉ thực thi nếu Checkstyle phát hiện lỗi
         run: |
           curl -u ${{ secrets.JIRA_USER }}:${{ secrets.JIRA_API_TOKEN }} \
           -X POST \
@@ -43,8 +40,8 @@ jobs:
           -d '{
             "fields": {
                "project": { "key": "CON" },  # Project Key trong Jira
-               "summary": "❌ Merge failed in PR #${{ github.event.number }}",
-               "description": "Build or test failed after merging PR: ${{ github.event.pull_request.html_url }}",
+               "summary": "❌ Syntax error in PR #${{ github.event.number }}",
+               "description": "Syntax error found in PR: ${{ github.event.pull_request.html_url }}",
                "issuetype": { "name": "Bug" }
             }
           }' \
