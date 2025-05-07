@@ -96,12 +96,4 @@ public class User extends BaseEntity  implements UserDetails {
         return true; // Tai khoan dang hoat dong
         //return false; Tai khoan bi vo hieu hoa
     }
-
-
-    @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private Cart cart;
-
-    @OneToMany(mappedBy = "customer", cascade = CascadeType.ALL)
-    private List<Order> orders;
-
 }

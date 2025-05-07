@@ -1,0 +1,48 @@
+name: Java Syntax Check
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]  # Chạy khi có PR mở hoặc cập nhật
+
+jobs:
+  check-syntax:
+    runs-on: ubuntu-latest
+    
+    steps:
+      # Bước 1: Checkout mã nguồn từ repository
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      # Bước 2: Cài đặt Checkstyle
+      - name: Install Checkstyle
+        run: |
+          curl -s https://repo1.maven.org/maven2/com/puppycrawl/tools/checkstyle/8.45/checkstyle-8.45-all.jar -o checkstyle.jar  # Tải Checkstyle JAR
+
+      # Bước 3: Chạy Checkstyle để kiểm tra cú pháp Java
+      - name: Run Checkstyle
+        run: |
+          java -jar checkstyle.jar -c /google_checks.xml src/main/java/com/project/shopapp  # Kiểm tra cú pháp mã nguồn Java của bạn
+
+      # Bước 4: Thông báo lỗi nếu phát hiện vấn đề cú pháp
+      - name: Notify Jira if syntax error
+        if: failure()  # Chỉ thực thi nếu Checkstyle phát hiện lỗi
+        run: |
+          curl -u ${{ secrets.JIRA_USER }}:${{ secrets.JIRA_API_TOKEN }} \
+          -X POST \
+          -H "Content-Type: application/json" \
+          -d '{
+            "fields": {
+               "project": { "key": "CON" },  # Project Key trong Jira
+               "summary": "❌ Syntax error in PR #${{ github.event.number }}",
+               "description": "Syntax error found in PR: ${{ github.event.pull_request.html_url }}",
+               "issuetype": { "name": "Bug" }
+            }
+          }' \
+          https://thoai12309.atlassian.net/rest/api/2/issue/
+
+      # Bước 5: Thiết lập trạng thái "failure" cho PR nếu phát hiện lỗi cú pháp
+      - name: Set failure status on PR
+        if: failure()  # Chỉ thực thi nếu Checkstyle phát hiện lỗi
+        run: |
+          echo "Checkstyle found syntax errors, blocking merge!" 
+          exit 1  # Kết thúc và trả về trạng thái lỗi, ngừng quá trình merge
