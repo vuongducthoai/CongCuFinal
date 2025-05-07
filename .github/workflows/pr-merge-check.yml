@@ -1,0 +1,33 @@
+name: PR Merge Check
+
+on:
+  pull_request:
+    types: [closed]  # Chỉ khi PR được đóng lại (hoặc merge)
+
+jobs:
+  check-merge:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Run tests
+        run: |
+          npm ci
+          npm run test
+
+      - name: Notify Jira if failed
+        if: failure()  # Nếu kiểm tra bị lỗi
+        run: |
+          curl -u ${{ secrets.JIRA_USER }}:${{ secrets.JIRA_API_TOKEN }} \
+          -X POST \
+          -H "Content-Type: application/json" \
+          -d '{
+            "fields": {
+              "project": { "key": "ABC" },
+              "summary": "❌ Merge failed in PR #${{ github.event.number }}",
+              "description": "Build or test failed after merging PR: ${{ github.event.pull_request.html_url }}",
+              "issuetype": { "name": "Bug" }
+            }
+          }' \
+          https://yourcompany.atlassian.net/rest/api/2/issue/
